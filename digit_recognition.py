@@ -13,122 +13,124 @@ from tensorflow.examples.tutorials.mnist import input_data
 from tensorflow.contrib.layers import flatten
 
 
-# Parameters
-EPOCHS = 10
-BATCH_SIZE = 50
-learning_rate = 0.001
-n_classes = 10 
 
-
-layer_width = {
-    'layer_1': 6,
-    'layer_2': 16,
-    'fully_connected': 120
-}
-
-# Store layers weight & bias
-#  Note: weights dimensions are
-#   filter_height x filter_width x input_depth x output_depth
-#
-#   filter_height/filter_width: 
-#     For Layer 1, the requirement is to have a 28x28x6 inline with the
-#     LeNet architecture. Therefore, assuming a stride of 1, we plug
-#     in numbers to get the filter_height and filter_width.
-#     out_height = ceil(float(in_height - filter_height + 1)/float(strides[1]))
-#     28 = (32 - filter_height + 1) / 1. Therefore filter_height = 5
-#     Same for filter_width.
-#   input_depth: in this grayscale image it is 1 for layer 1.
-#                (could be 3 channels in color)
-#   output_depth: The output depth is given at each layer.
-
-weights = {
-    'layer_1': tf.Variable(tf.truncated_normal(
-        [5, 5, 1, layer_width['layer_1']],
-        mean = 0, stddev = 0.1)),
-    'layer_2': tf.Variable(tf.truncated_normal(
-        [5, 5, layer_width['layer_1'], layer_width['layer_2']],
-        mean = 0, stddev = 0.1)),
-    'fully_connected': tf.Variable(tf.truncated_normal(
-        [5*5*16, layer_width['fully_connected']],
-        mean = 0, stddev = 0.1)),
-    'out': tf.Variable(tf.truncated_normal(
-        [layer_width['fully_connected'], n_classes],
-        mean = 0, stddev = 0.1))
-}
-
-biases = {
-    'layer_1': tf.Variable(tf.zeros(layer_width['layer_1'])),
-    'layer_2': tf.Variable(tf.zeros(layer_width['layer_2'])),
-    'fully_connected': tf.Variable(tf.zeros(layer_width['fully_connected'])),
-    'out': tf.Variable(tf.zeros(n_classes))
-}
-
-def conv2d(x, W, b, strides=1):
-    x = tf.nn.conv2d(x, W, strides=[1, strides, strides, 1], padding='VALID')
-    x = tf.nn.bias_add(x, b)
-    return tf.nn.relu(x)
-
-
-def maxpool2d(x, k=2):
-    return tf.nn.max_pool(
-        x,
-        ksize=[1, k, k, 1],
-        strides=[1, k, k, 1],
-        padding='VALID')
-
-def LeNet(x):
-    # Reshape from 2D to 4D. This prepares the data for
-    # convolutional and pooling layers.
-    x = tf.reshape(x, (-1, 28, 28, 1))
-    
-    # Pad 0s to 32x32. Centers the digit further.
-    # Add 2 rows/columns on each side for height and width dimensions.
-    x = tf.pad(x, [[0, 0], [2, 2], [2, 2], [0, 0]], mode="CONSTANT")
-    
-    # Convolution Layer 1. Input = 32x32x1. Output = 28x28x6.
-    # Activation 1.
-    
-    conv1 = conv2d(x, weights['layer_1'], biases['layer_1'])
-
-    # Pooling Layer 1. Input = 28x28x6. Output = 14x14x6.
-    conv1 = maxpool2d(conv1)
-
-    # Convolution Layer 2. Output = 10x10x16.    
-    # Activation 2.
-    conv2 = conv2d(conv1, weights['layer_2'], biases['layer_2'])
-
-    # Pooling Layer 2. Input = 10x10x16. Output = 5x5x16.
-    conv2 = maxpool2d(conv2)
-
-    # Flatten Layer.
-    fc1 = tf.reshape(
-        conv2,
-        [-1, weights['fully_connected'].get_shape().as_list()[0]])
-    
-    # Fully Connected Layer 1. Input = 5x5x16. Output = 120.
-    fc1 = tf.add(
-        tf.matmul(fc1, weights['fully_connected']),
-        biases['fully_connected'])
-
-    # Activation 3.
-    fc1 = tf.nn.relu(fc1)
-
-    # Fully Connected Layer 2. Input = 120. Output = 10.
-    logits = tf.add(tf.matmul(fc1, weights['out']), biases['out'])
-    return logits
 
 class tf_context:
     def __init__(self):
+        # Parameters
+        self.EPOCHS = 10
+        self.BATCH_SIZE = 50
+        self.learning_rate = 0.001
+        self.n_classes = 10 
+                
+        self.layer_width = {
+            'layer_1': 6,
+            'layer_2': 16,
+            'fully_connected': 120
+        }
+
+        # Store layers weight & bias
+        #  Note: weights dimensions are
+        #   filter_height x filter_width x input_depth x output_depth
+        #
+        #   filter_height/filter_width: 
+        #     For Layer 1, the requirement is to have a 28x28x6 inline with the
+        #     LeNet architecture. Therefore, assuming a stride of 1, we plug
+        #     in numbers to get the filter_height and filter_width.
+        #     out_height = ceil(float(in_height - filter_height + 1)/float(strides[1]))
+        #     28 = (32 - filter_height + 1) / 1. Therefore filter_height = 5
+        #     Same for filter_width.
+        #   input_depth: in this grayscale image it is 1 for layer 1.
+        #                (could be 3 channels in color)
+        #   output_depth: The output depth is given at each layer.
+
+        self.weights = {
+            'layer_1': tf.Variable(tf.truncated_normal(
+                [5, 5, 1, self.layer_width['layer_1']],
+                mean = 0, stddev = 0.1)),
+            'layer_2': tf.Variable(tf.truncated_normal(
+                [5, 5, self.layer_width['layer_1'], self.layer_width['layer_2']],
+                mean = 0, stddev = 0.1)),
+            'fully_connected': tf.Variable(tf.truncated_normal(
+                [5*5*16, self.layer_width['fully_connected']],
+                mean = 0, stddev = 0.1)),
+            'out': tf.Variable(tf.truncated_normal(
+                [self.layer_width['fully_connected'], self.n_classes],
+                mean = 0, stddev = 0.1))
+        }
+
+        self.biases = {
+            'layer_1': tf.Variable(tf.zeros(self.layer_width['layer_1'])),
+            'layer_2': tf.Variable(tf.zeros(self.layer_width['layer_2'])),
+            'fully_connected': tf.Variable(tf.zeros(self.layer_width['fully_connected'])),
+            'out': tf.Variable(tf.zeros(self.n_classes))
+        }
+
+        
         self.x = tf.placeholder(tf.float32, (None, 784))
         self.y = tf.placeholder(tf.int32, (None))
         self.one_hot_y = tf.one_hot(self.y, 10)
-        self.logits = LeNet(self.x)
+        self.logits = self.LeNet(self.x)
         self.loss_operation = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(logits = self.logits, labels = self.one_hot_y))
         self.optimizer = tf.train.AdamOptimizer()
         self.training_operation = self.optimizer.minimize(self.loss_operation)
         self.correct_prediction = tf.equal(tf.argmax(self.logits, 1),
                                            tf.argmax(self.one_hot_y, 1))
         self.accuracy_operation = tf.reduce_mean(tf.cast(self.correct_prediction, tf.float32))
+
+    def conv2d(self, x, W, b, strides=1):
+        x = tf.nn.conv2d(x, W, strides=[1, strides, strides, 1], padding='VALID')
+        x = tf.nn.bias_add(x, b)
+        return tf.nn.relu(x)
+
+
+    def maxpool2d(self, x, k=2):
+        return tf.nn.max_pool(
+            x,
+            ksize=[1, k, k, 1],
+            strides=[1, k, k, 1],
+            padding='VALID')
+
+    def LeNet(self, x):
+        # Reshape from 2D to 4D. This prepares the data for
+        # convolutional and pooling layers.
+        x = tf.reshape(x, (-1, 28, 28, 1))
+        
+        # Pad 0s to 32x32. Centers the digit further.
+        # Add 2 rows/columns on each side for height and width dimensions.
+        x = tf.pad(x, [[0, 0], [2, 2], [2, 2], [0, 0]], mode="CONSTANT")
+        
+        # Convolution Layer 1. Input = 32x32x1. Output = 28x28x6.
+        # Activation 1.
+        
+        conv1 = self.conv2d(x, self.weights['layer_1'], self.biases['layer_1'])
+        
+        # Pooling Layer 1. Input = 28x28x6. Output = 14x14x6.
+        conv1 = self.maxpool2d(conv1)
+        
+        # Convolution Layer 2. Output = 10x10x16.    
+        # Activation 2.
+        conv2 = self.conv2d(conv1, self.weights['layer_2'], self.biases['layer_2'])
+        
+        # Pooling Layer 2. Input = 10x10x16. Output = 5x5x16.
+        conv2 = self.maxpool2d(conv2)
+        
+        # Flatten Layer.
+        fc1 = tf.reshape(
+            conv2,
+            [-1, self.weights['fully_connected'].get_shape().as_list()[0]])
+        
+        # Fully Connected Layer 1. Input = 5x5x16. Output = 120.
+        fc1 = tf.add(
+            tf.matmul(fc1, self.weights['fully_connected']),
+            self.biases['fully_connected'])
+        
+        # Activation 3.
+        fc1 = tf.nn.relu(fc1)
+        
+        # Fully Connected Layer 2. Input = 120. Output = 10.
+        logits = tf.add(tf.matmul(fc1, self.weights['out']), self.biases['out'])
+        return logits
 
 #model evaluation
 def evaluate(tf_c,
@@ -138,8 +140,8 @@ def evaluate(tf_c,
     sess = tf.get_default_session()
     #print ("X_validation shape {}".format(X_data.shape))
     
-    for offset in tqdm(range(0, num_examples, BATCH_SIZE)):
-        batch_x, batch_y = X_data[offset:offset+BATCH_SIZE], y_data[offset:offset+BATCH_SIZE]
+    for offset in tqdm(range(0, num_examples, tf_c.BATCH_SIZE)):
+        batch_x, batch_y = X_data[offset:offset+ tf_c.BATCH_SIZE], y_data[offset:offset + tf_c.BATCH_SIZE]
         loss, accuracy =  sess.run([tf_c.loss_operation,
                                     tf_c.accuracy_operation],
                                    feed_dict={tf_c.x: batch_x,
@@ -156,13 +158,13 @@ def train(tf_c, sess, X_train, y_train, X_validation, y_validation):
     sess.run(tf.global_variables_initializer())
     num_examples = len(X_train)
     
-    for i in range(EPOCHS):
+    for i in range(tf_c.EPOCHS):
         X_train, y_train = shuffle(X_train, y_train)
         #print ("{}. X_train shape {}".format(i, X_train.shape))
         print("EPOCH {} ...".format(i+1))
         print(" Training...");
-        for offset in tqdm(range(0, num_examples, BATCH_SIZE)):
-            end = offset + BATCH_SIZE
+        for offset in tqdm(range(0, num_examples, tf_c.BATCH_SIZE)):
+            end = offset + tf_c.BATCH_SIZE
             batch_x, batch_y = X_train[offset:end], y_train[offset:end]
             _, loss = sess.run([tf_c.training_operation,
                              tf_c.loss_operation],
@@ -182,8 +184,8 @@ def train(tf_c, sess, X_train, y_train, X_validation, y_validation):
         saver
     except NameError:
         saver = tf.train.Saver()
-        saver.save(sess, 'lenet')
-        print("Model saved")
+    saver.save(sess, 'lenet')
+    print("Model saved")
 
 if __name__ == '__main__':
     mnist = input_data.read_data_sets("MNIST_data/")
